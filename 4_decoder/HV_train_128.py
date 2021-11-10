@@ -48,9 +48,9 @@ gan_type = 'wgan'
 hinge = 10
 
 # dataset
-dataroot_128 = 'D:/VGGFace2/train_128/HVTrainData/'
+dataroot_128 = 'D:/VGGFace/train_128/HVTrainData/'
 
-dataroot_256 = 'D:/VGGFace2/train_256/HVTrainData/'
+dataroot_256 = 'D:/VGGFace/train_256/HVTrainData/'
 
 workers = 0
 
@@ -70,6 +70,7 @@ dataset_128 = dset.ImageFolder(root=dataroot_128,
                                    transforms.ToTensor(),
                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                                ]))
+print(len(dataset_128),len(dataset_256))
 
 # dataset_all = dataset_128+dataset_256
 dataset_all = [list(x) for x in zip(dataset_128, dataset_256)]
