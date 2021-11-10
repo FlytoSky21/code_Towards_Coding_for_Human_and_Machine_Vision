@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+import glob
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -26,7 +28,7 @@ from torch.nn import Linear, Conv2d, BatchNorm2d, LayerNorm, LeakyReLU, ConvTran
 from torch.nn import ReflectionPad2d, ReplicationPad2d
 from torch.nn.utils import spectral_norm
 
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 import torchvision.datasets as dset
 
 from utils.utils import to_var, to_data, weights_init, visualize, load_image
@@ -47,10 +49,31 @@ img_size_256 = 256
 gan_type = 'wgan'
 hinge = 10
 
-# dataset
-dataroot_128 = 'D:/VGGFace/train_128/HVTrainData/'
 
-dataroot_256 = 'D:/VGGFace/train_256/HVTrainData/'
+class MyDataset(Dataset):
+    def __init__(self, root_dir, transform=None):
+        self.root_dir = root_dir
+        self.transform = transform
+        self.images = glob.glob(root_dir + '/*/*.png')
+        self.images = sorted(self.images)
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, index):
+        img_path_128 = self.images[index]
+        img_path_256 = img_path_128.replace('train_128', 'train_256')
+        img_128 = Image.open(img_path_128)
+        img_256 = Image.open(img_path_256)
+
+        if self.transform:
+            img_128 = self.transform(img_128)
+            img_256 = self.transform(img_256)
+        return img_128, img_256
+
+
+# dataset
+dataroot = './dataset/train_128/HVTrainData'
 
 workers = 0
 
@@ -59,24 +82,15 @@ L1loss = nn.L1Loss()
 L2loss = nn.MSELoss()
 criterion = nn.BCEWithLogitsLoss()
 
-dataset_256 = dset.ImageFolder(root=dataroot_256,
-                               transform=transforms.Compose([
-                                   transforms.ToTensor(),
-                                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                               ]))
+dataset = MyDataset(root_dir=dataroot,
+                    transform=transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                    ]))
 
-dataset_128 = dset.ImageFolder(root=dataroot_128,
-                               transform=transforms.Compose([
-                                   transforms.ToTensor(),
-                                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                               ]))
-print(len(dataset_128),len(dataset_256))
+print(len(dataset))
 
-# dataset_all = dataset_128+dataset_256
-dataset_all = [list(x) for x in zip(dataset_128, dataset_256)]
-print(len(dataset_all))
-
-dataloader = DataLoader(dataset_all, batch_size=batch_size, shuffle=True, num_workers=workers, drop_last=True)
+dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=workers, drop_last=True)
 
 
 def compute_loss(gan_type, d_out, target, hinge=0):
@@ -247,16 +261,27 @@ for iii in range(roundt, 2):
     for epoch in range(epoch_s, epoches):
         for i, data in enumerate(dataloader, 0):
             with torch.no_grad():
-                real_img_128 = to_var(data[0][0][:, :, :, 0:img_size_128])
-                real_ske_128 = to_var(data[0][0][:, :, :, img_size_128:img_size_128 * 2])
+                print(data[0][0].size())
+                print(data[1][0].size())
+                plt.figure(figsize=(10, 10), dpi=80)
+                visualize(to_data(data[0][0, :, :, :]))
+                plt.show()
+                plt.figure(figsize=(10, 10), dpi=80)
+                visualize(to_data(data[1][0, :, :, :]))
+                plt.show()
+                real_img_128 = to_var(data[0][:, :, :, 0:img_size_128])
+                real_ske_128 = to_var(data[0][:, :, :, img_size_128:img_size_128 * 2])
                 real_ske_128 = netB2(real_ske_128)
-                masks_128 = to_var(data[0][0][:, 0:1, :, img_size_128 * 2:img_size_128 * 3])
+                masks_128 = to_var(data[0][:, 0:1, :, img_size_128 * 2:img_size_128 * 3])
 
-                real_img_256 = to_var(data[1][0][:, :, :, 0:img_size_256])
-                real_ske_256 = to_var(data[1][0][:, :, :, img_size_256:img_size_256 * 2])
+                real_img_256 = to_var(data[1][:, :, :, 0:img_size_256])
+                real_ske_256 = to_var(data[1][:, :, :, img_size_256:img_size_256 * 2])
                 real_ske_256 = netB2(real_ske_256)
-                masks_256 = to_var(data[1][0][:, 0:1, :, img_size_256 * 2:img_size_256 * 3])
+                masks_256 = to_var(data[1][:, 0:1, :, img_size_256 * 2:img_size_256 * 3])
 
+                plt.figure(figsize=(10, 10), dpi=80)
+                visualize(to_data(data[1][0, 0:1, :, img_size_256 * 2:img_size_256 * 3]))
+                plt.show()
                 input_img_128 = real_img_128 * (1 + masks_128) / 2
                 real_input_128 = torch.cat((input_img_128, real_ske_128, masks_128), dim=1)
 
@@ -307,10 +332,9 @@ for iii in range(roundt, 2):
             #     plt.figure(figsize=(10, 10), dpi=80)
             #     visualize(to_data(torch.cat((real_ske_256[0], real_img_256[0], fake_img_256[0]), dim=2)))
             #     plt.show()
-            plt.figure(figsize=(10, 10), dpi=80)
-            visualize(to_data(torch.cat((real_ske_256[0], real_img_256[0], fake_img_256[0]), dim=2)))
-            plt.show()
 
-        torch.save(netG.state_dict(), './1108data/models/HV_128/round_{:d}_ICME-VGG-netG-HV_{:d}.ckpt'.format(iii, epoch))
-        torch.save(netD.state_dict(), './1108data/models/HV_128/round_{:d}_ICME-VGG-netD-HV_{:d}.ckpt'.format(iii, epoch))
+        torch.save(netG.state_dict(),
+                   './dataset/models/HV_128/round_{:d}_ICME-VGG-netG-HV_{:d}.ckpt'.format(iii, epoch))
+        torch.save(netD.state_dict(),
+                   './dataset/models/HV_128/round_{:d}_ICME-VGG-netD-HV_{:d}.ckpt'.format(iii, epoch))
         epoch_s = 0

@@ -65,9 +65,11 @@ class MyDataset(Dataset):
     def __getitem__(self, index):  # 根据索引index返回dataset[index]
         img_path_128 = self.images[index]  # 根据索引index获取该图片
         img_path_256 = img_path_128.replace('train_128', 'train_256')  # 获取索引为index的图片的路径名
-        img_128 = io.imread(img_path_128)  # 读取该图片
-        img_256 = io.imread(img_path_256)
+        # img_128 = io.imread(img_path_128)  # 读取该图片
+        # img_256 = io.imread(img_path_256)
 
+        img_128 = Image.open(img_path_128)
+        img_256 = Image.open(img_path_256)
         if self.transform:
             img_128 = self.transform(img_128)  # 对样本进行变换
             img_256 = self.transform(img_256)
