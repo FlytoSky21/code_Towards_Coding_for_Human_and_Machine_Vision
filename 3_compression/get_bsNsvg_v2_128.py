@@ -159,7 +159,7 @@ def handle_image(src_fn, svg_fn, text_fn, rgb_fn, tri_fn, tri_fn_e):
 
   out_img = np.zeros((128, 128*3, 3), np.uint8)
 
-  out_img[:,0:128] = 0 # imd  #* (im_mask // 255)
+  out_img[:,0:128] = imd      # * (im_mask // 255)
   out_img[:,128:256] = sketch_im
   out_img[:,256:] = im_mask
   out_im = Image.fromarray(out_img)

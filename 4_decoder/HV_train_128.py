@@ -318,7 +318,7 @@ for iii in range(roundt, 2):
             errF = sum([content_weights[a] * loss_fns(A, real_rgb_f[a]) for a, A in enumerate(fake_rgb_f)])
 
             errR = L1loss(fake_img_256, real_img_256) * 100
-            errSSIM = ssim((fake_img_256 + 1) / 2, (real_img_256 + 1) / 2) * 1000
+            errSSIM = ssim((fake_img_256 + 1) / 2, (real_img_256 + 1) / 2) * 0
 
             errT = errG + errR + errF + errSSIM
             errT.backward()
