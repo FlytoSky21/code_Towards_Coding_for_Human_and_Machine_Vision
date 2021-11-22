@@ -95,12 +95,12 @@ def handle_image(src_fn, svg_fn, text_fn, rgb_fn, tri_fn, tri_fn_e):
   with open(text_fn,'w') as f:
     f.write(quantized_d)
   text_fid = text_fn.split('/')[-1][:-4]
-  with open(f'D:/VGGFace2/train_256/features/{text_fid}_qsvg.svg', 'w') as f:
+  with open(f'D:/VGGFace2/test_all_256/features/{text_fid}_qsvg.svg', 'w') as f:
     f.write(fmt_s1+quantized_d+fmt_s2)
   quantize_end_time = time.time()
   quantize_time = quantize_end_time-quantize_start_time
 
-  qsvgf = open(f'D:/VGGFace2/train_256/features/{text_fid}_qsvg.svg', 'r')
+  qsvgf = open(f'D:/VGGFace2/test_all_256/features/{text_fid}_qsvg.svg', 'r')
   drawing = svg2rlg(qsvgf)
   sketch_im = np.array(renderPM.drawToPIL(drawing))
   resize_sketch_im = np.array(renderPM.drawToPIL(drawing).resize((256,256)))
@@ -166,7 +166,7 @@ def handle_image(src_fn, svg_fn, text_fn, rgb_fn, tri_fn, tri_fn_e):
     os.mkdir(dir_path)
   out_im.save(tri_fn)
 
-  out_img[:,0:256] = imd
+  out_img[:,0:256] = 0 # imd
   out_img[:,256:512] = sketch_im
   out_img[:,512:] = 0
   out_im = Image.fromarray(out_img)  #.resize((256*3,256),Image.BICUBIC)
@@ -178,7 +178,7 @@ def handle_image(src_fn, svg_fn, text_fn, rgb_fn, tri_fn, tri_fn_e):
   return quantize_time,sample_time
 
 # SVG and corresponding RGB images placed in the folders
-svg_path = 'D:/VGGFace2/train_256/edges'
+svg_path = 'D:/VGGFace2/test_all_256/edges'
 quantize_time_g = 0
 sample_time_g = 0
 for fpath,dirname,fnames in os.walk(svg_path):
@@ -189,10 +189,10 @@ for fpath,dirname,fnames in os.walk(svg_path):
     srcs = sorted(glob.glob(src_files))
     for im, s in tqdm.tqdm(zip(srcs,svgs)):
       fid = s.split('/')[-1][6:-4]
-      quantize_time_l,sample_time_l = handle_image(im, s, f'D:/VGGFace2/train_256/features/{fid}.txt',
-                   f'D:/VGGFace2/train_256/features/{fid}.rgb',
-                   f'D:/VGGFace2/train_256/HVTrainData/{fid}_ec.png',
-                   f'D:/VGGFace2/train_256/MVTrainData/{fid}_e.png')
+      quantize_time_l,sample_time_l = handle_image(im, s, f'D:/VGGFace2/test_all_256/features/{fid}.txt',
+                   f'D:/VGGFace2/test_all_256/features/{fid}.rgb',
+                   f'D:/VGGFace2/test_all_256/HVTestData_256/{fid}_ec.png',
+                   f'D:/VGGFace2/test_all_256/MVTestData_256/{fid}_e.png')
       quantize_time_g += quantize_time_l
       sample_time_g +=sample_time_l
 print(f'quantize_time is {quantize_time_g}')

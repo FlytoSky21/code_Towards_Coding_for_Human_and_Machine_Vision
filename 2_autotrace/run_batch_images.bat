@@ -6,7 +6,7 @@
 echo %time%
 set start_time=%time%
 setlocal enabledelayedexpansion
-for /r D:\VGGFace2\test_128\edges\  %%i in (*.bmp) do (
+for /r D:\VGGFace2\test_all_128\edges\  %%i in (*.bmp) do (
     set bmpName=%%i
     set svgName=!bmpName:bmp=svg!
     autotrace.exe !bmpName! --output-file !svgName! --centerline --color-count 2

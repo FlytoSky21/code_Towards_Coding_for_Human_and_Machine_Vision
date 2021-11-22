@@ -20,9 +20,9 @@ model.opts.nms=0;                 % set to true to enable nms
 %% evaluate edge detector on BSDS500 (see edgesEval.m)
 if(0), edgesEval(model, 'show',1, 'name','' ); end
 
-img_dir = 'D:\dataset\VGG-Face256\vggface2_train\train\';
-edge_dir = 'D:\dataset\VGG-Face256\vggface2_train\edges\';
-resize_img_dir = 'D:\dataset\VGG-Face256\vggface2_train\imgs\';
+img_dir = 'D:\VGGFace2\test_all\';
+edge_dir = 'D:\VGGFace2\test_all_128\edges\';
+resize_img_dir = 'D:\VGGFace2\test_all_128\imgs\';
 sub_dir = dir(img_dir);
 t3 = clock;
 for i = 1:length(sub_dir)
@@ -46,11 +46,11 @@ for i = 1:length(sub_dir)
         jpg_path = fullfile(img_dir,sub_dir(i).name,jpg_files(j).name);
         [pathstr,name,suffix] = fileparts(jpg_path);
         %边缘处理
-        I = imresize(imread(jpg_path),[512,512]);
-        resize_img = imresize(I,[256,256]);
+        I = imresize(imread(jpg_path),[256,256]);
+        resize_img = imresize(I,[128,128]);
         imwrite(resize_img,[sub_resize_dir,'\',name,'.png'])
         E=edgesDetect(I,model);
-        E1 = imresize(E,[256,256]);
+        E1 = imresize(E,[128,128]);
         [Ox,Oy] = gradient2(convTri(E1,4));
         [Oxx,~] = gradient2(Ox);
         [Oxy,Oyy] = gradient2(Oy);
@@ -58,7 +58,7 @@ for i = 1:length(sub_dir)
         E2 = edgesNmsMex(E1,O,1,5,1.01,1);
         E3 = double(E2>=max(eps,20.0/255.0));
         E3 = bwmorph(E3,'thin',inf);
-        E4 = bwareaopen(E3, 10);
+        E4 = bwareaopen(E3, 3);
         E4=1-E4;
         E_simple = uint8(E4*255);
         imwrite(E_simple, [sub_edge_dir,'\', name, '.bmp']);
