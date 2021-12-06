@@ -34,7 +34,7 @@ import torchvision.datasets as dset
 
 from utils.utils import to_var, to_data, weights_init, visualize, load_image
 from utils.blur_network import myBlur, myDilate, myDilateBlur
-from utils.model_128 import Pix2pix256, DiscriminatorSN
+from utils.model_128_X10 import Pix2pix256, DiscriminatorSN
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--roundt', type=int, default=0)

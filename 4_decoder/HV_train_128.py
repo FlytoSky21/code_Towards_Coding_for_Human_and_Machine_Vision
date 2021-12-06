@@ -33,7 +33,7 @@ import torchvision.datasets as dset
 
 from utils.utils import to_var, to_data, weights_init, visualize, load_image
 from utils.blur_network import myBlur, myDilate, myDilateBlur
-from utils.model_128 import Pix2pix256, DiscriminatorSN
+from utils.model_128_HV import Pix2pix256, DiscriminatorSN
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--roundt', type=int, default=0)
@@ -73,7 +73,7 @@ class MyDataset(Dataset):
 
 
 # dataset
-dataroot = './dataset/train_128/HVTrainData'
+dataroot = 'D:/VGGFace/train_128/HVTrainData'
 
 workers = 0
 
@@ -285,6 +285,11 @@ for iii in range(roundt, 2):
                 input_img_128 = real_img_128 * (1 + masks_128) / 2
                 real_input_128 = torch.cat((input_img_128, real_ske_128, masks_128), dim=1)
 
+                # edge = real_input_128[:,3:6,:,:]
+                # plt.figure(figsize=(10, 10), dpi=80)
+                # visualize(to_data(edge[0, 0:3, :, :]))
+                # plt.show()
+
             netD.zero_grad()
             real_img_256.requires_grad_()
 
@@ -332,7 +337,9 @@ for iii in range(roundt, 2):
             #     plt.figure(figsize=(10, 10), dpi=80)
             #     visualize(to_data(torch.cat((real_ske_256[0], real_img_256[0], fake_img_256[0]), dim=2)))
             #     plt.show()
-
+            plt.figure(figsize=(10, 10), dpi=80)
+            visualize(to_data(torch.cat((real_ske_256[0], real_img_256[0], fake_img_256[0]), dim=2)))
+            plt.show()
         torch.save(netG.state_dict(),
                    './dataset/models/HV_128/round_{:d}_ICME-VGG-netG-HV_{:d}.ckpt'.format(iii, epoch))
         torch.save(netD.state_dict(),
